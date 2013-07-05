@@ -4,7 +4,7 @@
 #include <time.h>
 #include <unistd.h>
 
-JewelBox::JewelBox(Fl_Window* win, int x, int y, int width, int height) : Fl_Box(FL_BORDER_BOX, x, y, width, height, 0) {
+JewelBox::JewelBox(Fl_Window* win, int x, int y, int width, int height) : Fl_Box(FL_NO_BOX, x, y, width, height, 0) {
 	_win = win;
 	_box_side = width;
 }
@@ -49,7 +49,7 @@ JewelBox::JewelBox(Fl_Window* win, int x, int y, int width, int height) : Fl_Box
 	return(ret);
 }*/
 
-JewelBoard::JewelBoard(Fl_Window* win, int start_x, int start_y, int box_side) : Fl_Box(start_x, start_y, 8 * box_side, 8* box_side, 0) {
+JewelBoard::JewelBoard(Fl_Window* win, int start_x, int start_y, int box_side) : Fl_Box(start_x, start_y, 8 * box_side, 8 * box_side, 0) {
 	_win = win;
 	_size = 8;
 	_start_x = start_x;
@@ -68,7 +68,7 @@ JewelBoard::JewelBoard(Fl_Window* win, int start_x, int start_y, int box_side) :
 	_jewel_images[6] = new Fl_PNG_Image("image/Jewel7.png");
 
 	// get game logic
-	_logic = new JewelLogic(8, 7);
+	_logic = new JewelLogic(this, 8, 7);
 
 //_jewels[0] = new JewelBox(_win, start_x + box_side * 0, start_y + box_side * 0, box_side, box_side);
 
@@ -77,8 +77,10 @@ JewelBoard::JewelBoard(Fl_Window* win, int start_x, int start_y, int box_side) :
 		for (int j = 0; j < 8; j++) {
 			_jewels[i + 8 * j] = new JewelBox(_win, start_x + box_side * i, start_y + box_side * j, box_side, box_side);
 		}
-
 	}
+
+	//JewelBox* jbb = new JewelBox(_win, start_x - 60, start_y - 60, box_side, box_side);
+	//jbb->image(_jewel_images[0]);
 
 	// init the game, set color to each jewel box
 	_init_jewel_color();
@@ -161,6 +163,45 @@ int JewelBoard::handle(int event) {
 	return ret;
 		/*int ret = Fl_Box::handle(event);
 		return 1;*/
+}
+
+void JewelBoard::eliminate(int* eliminate_i, int* eliminate_j, int eliminate_length, int* move_i, int* move_j, int move_length, int range) {
+	// use select to delay for animation
+	struct timeval delay;
+	delay.tv_sec = 0;
+	delay.tv_usec = 1; // 1us here, but same with about 20ms
+
+	// eliminate the corresponding jewels
+	for (int k = 0; k < eliminate_length; k++) {
+		Fl::delete_widget(_jewels[eliminate_i[k] + _size * eliminate_j[k]]);
+	}
+
+	JewelBox* jbb = new JewelBox(_win, _start_x - 60, _start_y - 60, _box_side, _box_side);
+	jbb->image(_jewel_images[0]);
+	int current_i = eliminate_i[0];
+	JewelBox* new_jewels[eliminate_length];
+	for (int k = 0; k < eliminate_length; k++) {
+		new_jewels[k] = new JewelBox(_win, _start_x + _box_side * current_i, _start_y + _box_side * (k + 1), _box_side, _box_side);
+		printf("visible: %d\n", new_jewels[k]->visible());
+		new_jewels[k]->image(_jewel_images[0]);
+		printf("visible: %d\n", new_jewels[k]->visible());
+		new_jewels[k]->show();
+		printf("visible: %d\n", new_jewels[k]->visible());
+	}
+	Fl::check();
+	Fl::redraw();
+
+	// move the corresponding jewels
+	for (int a = 0; a <= range; a += 1) {
+		//printf("eliminate: %d %d %d %d %d %d %d %d\n", _box_side, a, i[0], j[0], i[1], j[1], i[2], j[2]);
+		for (int k = 0; k < move_length; k++) {
+			//printf("move: %d %d \n", _start_x + i[k] * _box_side, _start_y + j[k] * _box_side + a);
+			_jewels[move_i[k] + _size * move_j[k]]->position(_start_x + move_i[k] * _box_side, _start_y + move_j[k] * _box_side + a);
+		}
+		Fl::check();
+		Fl::redraw();
+		select(0, NULL, NULL, NULL, &delay);
+	}
 }
 
 void JewelBoard::_move_jewel(int last_active_i, int last_active_j, int cur_active_i, int cur_active_j) {

@@ -1,7 +1,12 @@
+#ifndef JEWEL_BOX_H_
+#define JEWEL_BOX_H_
+
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Box.H>
 #include <FL/Fl_PNG_Image.H>
 #include "../logic/jewel_logic.h"
+
+class JewelLogic;
 
 class JewelBox : public Fl_Box {
 public:
@@ -18,6 +23,8 @@ public:
 	JewelBoard(Fl_Window* win, int start_x, int start_y, int box_side);
 	//JewelBox* get_jewel_box(int i , int j);
 	int handle(int event);
+
+	void eliminate(int* eliminate_i, int* eliminate_j, int eliminate_length, int* move_i, int* move_j, int move_length, int range);
 private:
 	void _init_jewel_color();
 
@@ -44,3 +51,5 @@ private:
 	int _last_active_i;
 	int _last_active_j;
 };
+
+#endif
