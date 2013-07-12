@@ -24,3 +24,7 @@ EXPERIENCE:
 -> Fl_Group::insert()
 4. How to show part of a widget or an image in FLTK?
 -> Fl_Shared_Image
+
+BUG:
+1. Expected continuous elimination operation may stop sometime.
+-> TODO: check the "while" logic of the elimination
